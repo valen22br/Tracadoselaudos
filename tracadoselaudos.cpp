@@ -516,12 +516,14 @@ public:
     clientInfo * getclInfo();
     int getCount();
     int getSize();
-    clientInfo * clientInfoGetAddress();
+    clientInfo * getClientInfo();
+    int getClientID(string clientInitials);
     string getClientExamEmail(int idClient);
     string getClientInitials(int idClient);
     examInfo * examInfoGetAddress();
     void checkConnection();
     double transaction_total_value = 0;
+    void printClInfo(string text="Inside mysqlConnection - printing clInfo");
     
 private:
     string hostName;
@@ -589,7 +591,7 @@ void mysqlConnection::checkConnection()
     }
 }
 
-clientInfo * mysqlConnection::clientInfoGetAddress(){
+clientInfo * mysqlConnection::getClientInfo(){
     return clInfo;
 }
 
@@ -767,8 +769,8 @@ void mysqlConnection::insertPatientNames(readFile & obj, int clinicId)
                 obj.getPatientInfo()[i].patientName = obj.getPatientInfo()[i].patientName.substr(0,obj.getPatientInfo()[i].patientName.size()-4);
             }
         }
-        //for(int j = 0; j < examCount; j++)
-        for(int j = 0; j < obj.getCount(); j++)
+        //for(int j = 0; j < obj.getCount(); j++)
+        for(int j = 0; j < examCount; j++)
         {
             if(exInfo[j].exam_extension == extension)
             {
@@ -826,7 +828,7 @@ void mysqlConnection::insertPatientNames(readFile & obj, int clinicId)
 
 void mysqlConnection::insertTransactionDetails(readFile & obj, string mysqlExamDateFormat, string mysqlActualDateFormat){
     
-    //obj.printReadFile("Inside InsertTransactionsDetails");
+    //obj.printReadFile("Inside InsertTransactionsDetails=: Guti");
     
     string sqlValues = "";
     
@@ -1061,6 +1063,17 @@ int mysqlConnection::getSize(){
     return size;
 }
 
+int mysqlConnection::getClientID(string clientInitials)
+{
+    int clientId = 0;
+    for(int i = 0; i < getCount(); i++)
+    {
+        if(clInfo[i].clientInitial == clientInitials)
+            clientId = clInfo[i].clientId;
+    }
+    return clientId;
+}
+
 string mysqlConnection::getClientExamEmail(int idClient)
 {
     string clientExamEmail = "NotFound";
@@ -1083,6 +1096,28 @@ string mysqlConnection::getClientInitials(int idClient)
     return clientInitial;
 }
 
+void mysqlConnection::printClInfo(string text)
+{
+    cout << text << endl;
+    cout << "client_id|clientName|clientInitial|clientExamEmails|clientChargeEmail|clientActive" << endl;
+    for(int i = 0; i < count; i++)
+    {
+        cout << clInfo[i].clientId << " ";
+        cout << clInfo[i].clientName << " ";
+        cout << clInfo[i].clientInitial << " ";
+        cout << clInfo[i].clientExamEmails << " ";
+        cout << clInfo[i].clientChargeEmail << " ";
+        cout << clInfo[i].clientActive << " "<< endl;
+        
+//        string clientName;
+//        string clientInitial;
+//        string clientExamEmails;
+//        string clientChargeEmail;
+//        int clientActive;
+
+        
+    }
+}
 
 mysqlConnection::~mysqlConnection(){
     cout << "The ~mysqlConnection deconstructor called" << endl;
@@ -1147,8 +1182,9 @@ int main() {
         mysqlConn.insertFileName(newFile.getFileName());
         newFile.createTargzFile();
         
+        
         readFile newReadFile;
-        //newReadFile.printReadFile("Insede Main");
+        //newReadFile.printReadFile("Inside Main ++++++++++++++++++++++++++++++++++++ ");
         
         cout << "Size of readFile => " << newReadFile.getCount() << endl;
         
@@ -1177,26 +1213,29 @@ int main() {
         
         patientInfo * patientInformation = newReadFile.getPatientInfo();
         
+        int clientId = mysqlConn.getClientID(clinicInitial);
+        //mysqlConn.printClInfo("INSIDE MAIL");
+        
         if(patientInformation != NULL)
         {
             
-            string link = "http://www.tracadoselaudos.com.br/" + mysqlConn.getClientInitials(patientInformation[0].client_id) + "/"+ newFile.getFileName();
+            string link = "http://www.tracadoselaudos.com.br/" + mysqlConn.getClientInitials(clientId) + "/"+ newFile.getFileName();
             
             string sendEmail = "no";
             
             cout << endl << link << endl;
             
-            cout << "Send Email to " + mysqlConn.getClientExamEmail(patientInformation[0].client_id) + "? "<< endl;
+            cout << "Send Email to " + mysqlConn.getClientExamEmail(clientId) + "? "<< endl;
             cin >> sendEmail;
             
             if(sendEmail == "s" || sendEmail == "S" || sendEmail == "y" || sendEmail == "Y")
             {
                 
                 
-                emailManipulation.EmailSend("Análise(s) do dia " + newFile.getExamDate(), link + "\n" + newReadFile.getListPacientsFormatedForEmail(), mysqlConn.getClientExamEmail(patientInformation[0].client_id));
+                emailManipulation.EmailSend("Análise(s) do dia " + newFile.getExamDate() + " "+ newFile.getFileName(), link + "\n" + newReadFile.getListPacientsFormatedForEmail(), mysqlConn.getClientExamEmail(clientId));
                 
-                cout << endl<< "clientID=> " << patientInformation[0].client_id ;
-                cout << endl<< "clientEmail=> " << mysqlConn.getClientExamEmail(patientInformation[0].client_id) << endl;
+                cout << endl<< "clientID=> " << clientId ;
+                cout << endl<< "clientEmail=> " << mysqlConn.getClientExamEmail(clientId) << endl;
                 
             }
             
