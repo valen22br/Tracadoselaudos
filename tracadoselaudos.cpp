@@ -1232,7 +1232,7 @@ int main() {
             {
                 
                 
-                emailManipulation.EmailSend("Análise(s) do dia " + newFile.getExamDate() + " "+ newFile.getFileName(), link + "\n" + newReadFile.getListPacientsFormatedForEmail(), mysqlConn.getClientExamEmail(clientId));
+                emailManipulation.EmailSend("Análise(s) do dia " + newFile.getExamDate() + " Arquivo: "+ newFile.getFileName(), link + "\n" + newReadFile.getListPacientsFormatedForEmail(), mysqlConn.getClientExamEmail(clientId));
                 
                 cout << endl<< "clientID=> " << clientId ;
                 cout << endl<< "clientEmail=> " << mysqlConn.getClientExamEmail(clientId) << endl;
