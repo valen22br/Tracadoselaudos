@@ -284,8 +284,8 @@ class PythonScript
 };
 void PythonScript::ExecutePython(string scriptName, string clInitial, string examDate)
 {
-    cout << "Executing Python Script with scriptNamd:  " + scriptName + ", clInitial:" + clInitial + " and date: "+ examDate + ")";
-    cout << "system((python3.6 " + scriptName + " " + clInitial + " " + examDate + ")";
+    cout << endl<< "Executing Python Script with scriptName:  " + scriptName + ", clInitial:" + clInitial + " and date: "+ examDate + ")";
+    cout << endl<< "system((python3.6 " + scriptName + " " + clInitial + " " + examDate + ")";
     system(("python3.6 " + scriptName + " " + clInitial + " " + examDate).c_str());
     
 }
@@ -1263,16 +1263,14 @@ int main() {
             if(sendEmail == "s" || sendEmail == "S" || sendEmail == "y" || sendEmail == "Y")
             {
                 
-                
                 emailManipulation.EmailSend("Análise(s) do dia " + newFile.getExamDate() + " | Arquivo: "+ newFile.getFileName(), link + "\n" + newReadFile.getListPacientsFormatedForEmail(), mysqlConn.getClientExamEmail(clientId));
                 
                 cout << endl<< "clientID=> " << clientId ;
                 cout << endl<< "clientEmail=> " << mysqlConn.getClientExamEmail(clientId) << endl;
                 
+                pythonScript.ExecutePython("google_spreadsheet.py", clinicInitial, newFile.getPythonExamDateFormat());
+
             }
-            
-            pythonScript.ExecutePython("google_spreadsheet.py", clinicInitial, newFile.getPythonExamDateFormat());
-            
         }
         //systemComm.getCommandResult("echo \"677020\" | sudo -S postfix stop");
         sentinel = "out";
