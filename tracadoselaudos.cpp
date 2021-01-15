@@ -275,6 +275,21 @@ void Email::EmailSend(string subject, string body, string toAddress, string from
 //    system((body + "| mail -s \"" + subject + " "+ toAddress).c_str());
 }
 
+class PythonScript
+{
+    public:
+        PythonScript(){};
+        void ExecutePython(string scriptName, string clInitial, string date);
+    private:
+};
+void PythonScript::ExecutePython(string scriptName, string clInitial, string examDate)
+{
+    cout << "Executing Python Script with scriptNamd:  " + scriptName + ", clInitial:" + clInitial + " and date: "+ examDate + ")";
+    cout << "system((python3.6 " + scriptName + " " + clInitial + " " + examDate + ")";
+    system(("python3.6 " + scriptName + " " + clInitial + " " + examDate).c_str());
+    
+}
+
 class createTargz{
 public:
     createTargz(string clinicInitial, int pastDays);
@@ -287,6 +302,7 @@ public:
     string getActualDate();
     string getMysqlActualDateFormat();
     string getMysqlExamDateFormat();
+    string getPythonExamDateFormat();
     string getClinicInitials();
     int getClinicId();
     
@@ -300,6 +316,7 @@ private:
     string actualDate;
     string mysqlActualDateFormat;
     string mysqlExamDateFormat;
+    string pythonExamDateFormat;
     int day;
     int month;
     int year;
@@ -405,6 +422,7 @@ createTargz::createTargz(string clinicInitial, int pastDays){
     }
     examDate = to_string(day)+"_"+to_string(month)+"_"+to_string(year);
     mysqlExamDateFormat =  to_string(year)+"-"+to_string(month)+"-"+to_string(day);
+    pythonExamDateFormat = to_string(month)+"/"+to_string(day)+ "/"+to_string(year);
     cout << endl << "examDate => "<< examDate<< endl;
 }
 
@@ -470,6 +488,11 @@ string createTargz::getMysqlActualDateFormat()
 string createTargz::getMysqlExamDateFormat()
 {
     return mysqlExamDateFormat;
+}
+
+string createTargz::getPythonExamDateFormat()
+{
+    return pythonExamDateFormat;
 }
 
 string createTargz::getClinicInitials(){
@@ -548,10 +571,18 @@ private:
 
 mysqlConnection::mysqlConnection()
 {
-    hostName = "tracadoselaudos.tracadoselaudos.com.br";
-    userName = "valen22br";
-    passWord = "Gustavo2000";
-    bdScheme = "tracadoselaudos";
+    sql::ConnectOptionsMap connection_properties;
+    
+//    hostName = "tracadoselaudos.tracadoselaudos.com.br";
+//    userName = "valen22br";
+//    passWord = "Gustavo2000";
+//    bdScheme = "tracadoselaudos";
+    
+    connection_properties ["hostName"] = std::string("tracadoselaudos.tracadoselaudos.com.br");
+    connection_properties ["userName"] = std::string("valen22br");
+    connection_properties ["password"] = std::string("Gustavo2000");
+    connection_properties ["schema"] = std::string("tracadoselaudos");
+    connection_properties ["OPT_RECONNECT"] = true;
     
     cout << endl;
     cout << "Creating Mysql Connection..." << endl;
@@ -560,7 +591,7 @@ mysqlConnection::mysqlConnection()
         
         /* Create a connection */
         driver = get_driver_instance();
-        con = driver->connect(hostName,userName,passWord);
+        con = driver->connect(connection_properties);
         /* Connect to the MySQL test database */
         con->setSchema(bdScheme);
         
@@ -1209,6 +1240,7 @@ int main() {
         mysqlConn.selectSumCurrentDateAndExamDate(newFile);
         
         Email emailManipulation;
+        PythonScript pythonScript;
         cout << "Exam Date " << newFile.getExamDate() << endl;
         
         patientInfo * patientInformation = newReadFile.getPatientInfo();
@@ -1238,6 +1270,8 @@ int main() {
                 cout << endl<< "clientEmail=> " << mysqlConn.getClientExamEmail(clientId) << endl;
                 
             }
+            
+            pythonScript.ExecutePython("google_spreadsheet.py", clinicInitial, newFile.getPythonExamDateFormat());
             
         }
         //systemComm.getCommandResult("echo \"677020\" | sudo -S postfix stop");
