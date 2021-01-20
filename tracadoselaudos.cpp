@@ -268,6 +268,7 @@ class Email
     
     private:
 };
+
 void Email::EmailSend(string subject, string body, string toAddress, string fromAddress)
 {
     cout << "system((echo\" " + body + "| mail -s \"" + subject + "\" "+ toAddress + ")";
@@ -280,14 +281,22 @@ class PythonScript
     public:
         PythonScript(){};
         void ExecutePython(string scriptName, string clInitial, string date);
+    void ExecutePython(string scriptName);
     private:
 };
+
 void PythonScript::ExecutePython(string scriptName, string clInitial, string examDate)
 {
     cout << endl<< "Executing Python Script with scriptName:  " + scriptName + ", clInitial:" + clInitial + " and date: "+ examDate + ")";
     cout << endl<< "system((python3.6 " + scriptName + " " + clInitial + " " + examDate + ")";
     system(("python3.6 " + scriptName + " " + clInitial + " " + examDate).c_str());
-    
+}
+
+void PythonScript::ExecutePython(string scriptName)
+{
+    cout << endl<< "Executing Python Script with scriptName:  " + scriptName;
+    cout << endl<< "system((python3.6 " + scriptName + ")";
+    system(("python3.6 " + scriptName).c_str());
 }
 
 class createTargz{
@@ -1208,6 +1217,8 @@ int main() {
         }
         
         createTargz newFile(clinicInitial, pastDays);
+        PythonScript pythonScript;
+        pythonScript.ExecutePython("google_spreadsheet.py", clinicInitial, newFile.getPythonExamDateFormat());
         
         newFile.createFileName(clientInformation, count, size, fileComplementName);
         mysqlConn.insertFileName(newFile.getFileName());
@@ -1240,7 +1251,6 @@ int main() {
         mysqlConn.selectSumCurrentDateAndExamDate(newFile);
         
         Email emailManipulation;
-        PythonScript pythonScript;
         cout << "Exam Date " << newFile.getExamDate() << endl;
         
         patientInfo * patientInformation = newReadFile.getPatientInfo();
@@ -1262,14 +1272,13 @@ int main() {
             
             if(sendEmail == "s" || sendEmail == "S" || sendEmail == "y" || sendEmail == "Y")
             {
-                
-                pythonScript.ExecutePython("google_spreadsheet.py", clinicInitial, newFile.getPythonExamDateFormat());
                 emailManipulation.EmailSend("Análise(s) do dia " + newFile.getExamDate() + " | Arquivo: "+ newFile.getFileName(), link + "\n" + newReadFile.getListPacientsFormatedForEmail(), mysqlConn.getClientExamEmail(clientId));
                 
                 cout << endl<< "clientID=> " << clientId ;
                 cout << endl<< "clientEmail=> " << mysqlConn.getClientExamEmail(clientId) << endl;
             }
         }
+        pythonScript.ExecutePython("delete_files.py");
         //systemComm.getCommandResult("echo \"677020\" | sudo -S postfix stop");
         sentinel = "out";
         
